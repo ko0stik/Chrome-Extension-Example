@@ -358,6 +358,48 @@ Popup = {
       });
     }
 
+	  var files = $('#attachment')[0].files
+	  var file
+	  if (files.length !== 0) {
+		file = files[0]
+	  }
+	  var cookie
+
+	  uploadAttachment = function(id, file) {
+		  chrome.cookies.getAll({name: 'ticket'}, function(cookies) {
+			token = cookies[0] && cookies[0].value
+			authorizationToken = window.btoa(token)
+			var formData = new FormData()
+			formData.append("file", file)
+			opts = {
+				type: "POST",
+				url: `https://app.asana.com/api/1.0/tasks/${id}/attachments`,
+				headers: {
+					"Authorization": `Basic ${authorizationToken}`,
+					"X-Requested-With": "XMLHttpRequest",
+					"X-Allow-Asana-Client": "1"
+				},
+				processData: false,
+				contentType: false,
+				data: formData,
+				success: function(msg) {
+					console.log('success', msg)
+				},
+				error: function(msg) {
+					console.log('error', msg)
+				}
+			}
+			console.log(opts)
+			$.ajax(opts)
+		  })
+	  }
+	  // to comment if want to stop from creating new tasks
+	   /**
+	taskId = "297989511833490"
+	uploadAttachment(taskId, file)
+	return;
+	  **/
+	  // endToComment
     Asana.ServerModel.createTask(
         me.selectedWorkspaceId(),
         {
@@ -368,6 +410,10 @@ Popup = {
         },
         function(task) {
           // Success! Show task success, then get ready for another input.
+	console.log(task)
+	if (file) {
+		uploadAttachment(task.id, file)
+	}
           Asana.ServerModel.logEvent({
             name: "ChromeExtension-CreateTask-Success"
           });
